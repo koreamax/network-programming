@@ -129,23 +129,69 @@ int main()
     }
     */
     /*
+    // 균등분포
     for (int i = 0; i < 10; i++) {
         printf("%f ", uniform(0.9, 1.5));
     }
     */
     /*
+    // 기하분포
     for (int i = 0; i < 10; i++) {
         printf("%d ", geometric(0.1));
     }
     */
+    /*
+    // 지수분포
     for (int i = 0; i < 10; i++) {
         printf("%f ", exponential(0.1));
     }
-} 
-/* 
-전부 다 한 줄 짜리로 짜기 
-random(n, k){복권}, geometric(double p){기하분포}, exponential(lambda){지수분포}
--> 이렇게 짜기
-pdf, pmf, PDF의 관계를 생각하면 한 줄로 짤 수 있음 
-unifrom = 1 / b - a
-*/
+    */
+
+    // 고객이 랜덤하게 도착하고 은행원이 한 명씩 처리하는 시스템
+
+    int Te = 10000000; // 은행 전체 시간
+    int t1, t2, time; // 다음 고객 도착 시간, 현재 서비스 종료 시간, 현재 시간
+    int Ta, Ts;
+    double Pa = 0.1, Ps = 0.1; // 도착 확률, 서비스 확률
+    int n; // 은행에 있는 고객 수
+    int cnt_arri=0, cnt_off=0; // 도착한 고객 수, 서비스 시작한 고객 수
+    int res_time = 0; // 고객들이 거주하고 있는 시간
+    double mean_time = 0; // mean number의 적분
+    int next_time; // 다음 시간이 t1인지 t2인지 예측
+
+    n = 0; t1 = 0; t2 = Te; time = 0;
+    while (time < Te) { // 은행이 문 닫을 때까지 
+        next_time = (t1 < t2) ? t1 : t2; // t1, t2 중 하나
+        mean_time += (double)n * (next_time - time); // 적분
+        if (t1 < t2) { // 서비스가 진행되고 있는 중에 고객이 도착
+            time = t1; // 현재 시간은 고객이 도착한 시간
+            n++; // 은행에 있는 고객 추가
+            cnt_arri++; // 도착한 고객 추가
+            // printf("at time %d, customer %d arrive\n", time, cnt_arri); 
+            t1 = time + geometric(Pa); // 다음 고객 도착 시간 랜덤
+            if (n == 1) { // 은행에 고객이 하나라면 바로 서비스 시작
+                cnt_off++; // 서비스 고객 수 추가
+                // printf("at time %d, customer %d begin\n", time, cnt_off);
+                t2 = time + geometric(Ps); // 서비스 종료 시간 랜덤
+                res_time += t2 - t1; // 고객 상주 시간 추가
+            }
+        }
+        else { // 서비스가 끝났을 때
+            time = t2; n--; // 현재 시간을 끝난 시간으로 맞추고 남아 있는 은행 고객 한 명 줄이기
+            // printf("at time %d, customer %d end\n", time, cnt_off);
+            if (n > 0) { // 끝나고도 고객이 남아있다면
+                cnt_off++; // 서비스 시작
+                // printf("at time %d, customer %d begin\n", time, cnt_off);
+                t2 = time + geometric(Ps); // 끝나는 시간 랜덤
+                res_time += t2 - time; // 고객 상주 시간 추가
+            }
+            else {
+                t2 = Te; // 고객이 더 안 들어온다면 은행 종료
+            }
+        }
+    }
+    printf("throughput = %f\n", (double)cnt_arri / Te);
+    printf("utilization = %f\n", (double)res_time / Te);
+    printf("mean no. in system = %f\n", mean_time / Te);
+    printf("mean residence time = %f", mean_time / cnt_arri);
+}
