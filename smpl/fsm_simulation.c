@@ -1,3 +1,4 @@
+// image.png 문제
 #include <stdio.h>
 #include "rand.c"
 
